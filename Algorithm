@@ -1,0 +1,111 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author tezbirsingh
+ */
+import javax.swing.JOptionPane;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class Algorithm {
+
+    public static double calculateRetail(double wholesaleCost, double markupPercentage, int supplyLevel) {
+        double supplyFactor;
+
+        if (supplyLevel < 100) {
+            supplyFactor = (100 - supplyLevel) / 100.0;
+            markupPercentage += markupPercentage * supplyFactor;
+        } else if (supplyLevel > 100) {
+            supplyFactor = (supplyLevel - 100) / 100.0;
+            markupPercentage -= markupPercentage * supplyFactor * 0.5;
+        }
+
+        return wholesaleCost + (markupPercentage / 100.0) * wholesaleCost;
+    }
+
+    // Fetch the latest egg price from BLS API
+    public static double fetchPriceFromBLS() {
+        try {
+            URL url = new URL("https://api.bls.gov/publicAPI/v2/timeseries/data/");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String jsonInput = "{"
+                    + "\"seriesid\": [\"APU0000708111\"],"
+                    + "\"startyear\": \"2024\","
+                    + "\"endyear\": \"2025\""
+                    + "}";
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonInput.getBytes());
+                os.flush();
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder responseStr = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                responseStr.append(inputLine);
+            }
+            in.close();
+
+            JSONObject json = new JSONObject(responseStr.toString());
+            JSONArray seriesArray = json.getJSONObject("Results").getJSONArray("series");
+            JSONArray dataArray = seriesArray.getJSONObject(0).getJSONArray("data");
+
+            if (dataArray.length() > 0) {
+                JSONObject latestEntry = dataArray.getJSONObject(0);
+                return Double.parseDouble(latestEntry.getString("value"));
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error fetching egg price: " + e.getMessage());
+        }
+
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        String input;
+        double wholesaleCost;
+        double markupPercentage;
+        int supplyLevel;
+        double retailPrice;
+
+        try {
+            double eggPrice = fetchPriceFromBLS();
+            String eggPriceMsg = eggPrice > 0 ? String.format("Current BLS Egg Price (per dozen): $%.2f", eggPrice) : "Egg price unavailable.";
+
+            input = JOptionPane.showInputDialog("Enter the wholesale cost:");
+            wholesaleCost = Double.parseDouble(input);
+
+            input = JOptionPane.showInputDialog("Enter the base markup percentage:");
+            markupPercentage = Double.parseDouble(input);
+
+            input = JOptionPane.showInputDialog("Enter current supply level (e.g., 100 = normal):");
+            supplyLevel = Integer.parseInt(input);
+
+            retailPrice = calculateRetail(wholesaleCost, markupPercentage, supplyLevel);
+
+            JOptionPane.showMessageDialog(null, String.format("Calculated Retail Price: $%.2f\n\n%s", retailPrice, eggPriceMsg));
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid input: " + e.getMessage());
+        }
+
+        System.exit(0);
+    }
+}
+
+
