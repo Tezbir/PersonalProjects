@@ -1,0 +1,119 @@
+import java.util.Scanner;
+
+public class MPGCalculator {
+
+    public static void main(String[] args) {
+
+        double MPG;
+        String carModel;
+        double epaHighwayMPG;
+        double epaCityMPG;
+        double fuelTankSize;
+        double milesTraveled;
+        int airFilterMileage;
+        double cityPercentage;
+        double highwayPercentage;
+        double price;
+        double expectedMPG;
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("DISCLAIMER: Don't forget to reset your trip odometer every time you fill your tank;");
+
+        while (true) {
+            System.out.println("\nWelcome to the MPG calculator");
+
+            System.out.println("What is your car? Enter format: BrandModelYear");
+            carModel = scanner.nextLine();
+
+            System.out.println("What is this car's rated HIGHWAY MPG according to the EPA?");
+            epaHighwayMPG = scanner.nextDouble();
+
+            System.out.println("What is this car's rated CITY MPG according to the EPA?");
+            epaCityMPG = scanner.nextDouble();
+
+            System.out.println("What is your fuel tank size?");
+            fuelTankSize = scanner.nextDouble();
+
+            System.out.println("How much per gallon of fuel?");
+            price = scanner.nextDouble();
+
+            scanner.nextLine(); 
+
+            while (true) {
+                System.out.println("\n--- New MPG Calculation for " + carModel + " ---");
+
+                System.out.println("How far can you make it on a single tank of fuel?");
+                milesTraveled = scanner.nextDouble();
+
+                System.out.println("What percentage of your driving is in city traffic? (0-100)");
+                cityPercentage = scanner.nextDouble();
+                while (cityPercentage < 0 || cityPercentage > 100) {
+                    System.out.println("Please enter a valid percentage (0-100).");
+                    cityPercentage = scanner.nextDouble();
+                }
+
+                highwayPercentage = 100 - cityPercentage;
+
+                
+                expectedMPG = (cityPercentage / 100) * epaCityMPG + (highwayPercentage / 100) * epaHighwayMPG;
+
+                MPG = milesTraveled / fuelTankSize;
+                System.out.printf("Your current miles per gallon is "+ MPG);
+                System.out.printf("Your expected EPA-rated MPG (based on %.0f%% city and %.0f%% highway) is %.2f%n",
+                        cityPercentage, highwayPercentage, expectedMPG);
+
+                scanner.nextLine(); 
+
+                if (MPG < expectedMPG) {
+                    System.out.println("Your MPG is not as high as the EPA rating... let's fix this");
+
+                    System.out.println("Are you experiencing heavy city traffic or start-stop driving conditions? (Yes/No)");
+                    String traffic = scanner.nextLine();
+
+                    if (traffic.equalsIgnoreCase("Yes")) {
+                        System.out.println("This may be lowering your MPG as your vehicle must work very hard in order to travel very small distances.");
+                        System.out.println("If possible, plan ahead of your commute and avoid times of road congestion (i.e rush hour)");
+                    } else {
+                        System.out.println("Are you driving too fast? (Above 55 mph)");
+                        String fastDriving = scanner.nextLine();
+
+                        if (fastDriving.equalsIgnoreCase("Yes")) {
+                            System.out.println("Driving too fast increases wind resistance exponentially above 40 mph.");
+                            System.out.println("Maintain the flow of traffic, but don't go out of your way to speed.");
+                        } else {
+                            System.out.println("How many miles have gone since you changed your engine and cabin air filter?");
+                            airFilterMileage = scanner.nextInt();
+                            scanner.nextLine(); 
+
+                            if (airFilterMileage > 15000) {
+                                System.out.println("Having a dirty air filter prevents fuel from burning properly, lowering your MPGs.");
+                            }
+                        }
+                    }
+                } else if (Math.abs(MPG - expectedMPG) < 1.0) {
+                    System.out.println("Your MPG is about as expected based on EPA ratings.");
+                } else {
+                    System.out.println("Your MPG is better than the EPA predicted!");
+                }
+
+                System.out.println("\nDo you want to calculate MPG again for the same car? (yes/no)");
+                String again = scanner.nextLine();
+                if (again.equalsIgnoreCase("no")) {
+                    break;
+                }
+            }
+
+            System.out.println("Do you have a different car model to enter?");
+            String newCar = scanner.nextLine();
+            if (newCar.equalsIgnoreCase("no")) {
+                System.out.println("Exiting the program.");
+                break;
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+	
